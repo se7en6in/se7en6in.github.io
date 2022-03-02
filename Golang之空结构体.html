@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon16.ico">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.ise7en.cn","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="go struct 能不能比较？能比较又不可比较。  当结构体内基本类型包含：slice、map、function 时，是不能比较的。若强行比较，就会导致直接报错  那么空结构体比较的结果又会是什么呢？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang之空结构体">
+<meta property="og:url" content="https://blog.ise7en.cn/Golang%E4%B9%8B%E7%A9%BA%E7%BB%93%E6%9E%84%E4%BD%93.html">
+<meta property="og:site_name" content="雪崩时 没有一片雪花是无辜的">
+<meta property="og:description" content="go struct 能不能比较？能比较又不可比较。  当结构体内基本类型包含：slice、map、function 时，是不能比较的。若强行比较，就会导致直接报错  那么空结构体比较的结果又会是什么呢？">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-04-15T02:43:33.000Z">
+<meta property="article:modified_time" content="2022-03-02T08:07:49.673Z">
+<meta property="article:author" content="se7en">
+<meta property="article:tag" content="Golang">
+<meta property="article:tag" content="结构体">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.ise7en.cn/Golang%E4%B9%8B%E7%A9%BA%E7%BB%93%E6%9E%84%E4%BD%93.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Golang之空结构体 | 雪崩时 没有一片雪花是无辜的</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">雪崩时 没有一片雪花是无辜的</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.ise7en.cn/Golang%E4%B9%8B%E7%A9%BA%E7%BB%93%E6%9E%84%E4%BD%93.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar_blog.jpg">
+      <meta itemprop="name" content="se7en">
+      <meta itemprop="description" content="斜杠青年，se7en的博客">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="雪崩时 没有一片雪花是无辜的">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Golang之空结构体
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-15 10:43:33" itemprop="dateCreated datePublished" datetime="2021-04-15T10:43:33+08:00">2021-04-15</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Golang/" itemprop="url" rel="index"><span itemprop="name">Golang</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>go struct 能不能比较？能比较又不可比较。</p>
+<blockquote>
+<p>当结构体内基本类型包含：slice、map、function 时，是不能比较的。若强行比较，就会导致直接报错</p>
+</blockquote>
+<p>那么空结构体比较的结果又会是什么呢？</p>
+<span id="more"></span>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">new</span>(<span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	b := <span class="built_in">new</span>(<span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	fmt.Println(a==b)<span class="comment">//false</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果是 false</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	a := <span class="built_in">new</span>(<span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	b := <span class="built_in">new</span>(<span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	fmt.Println(&amp;a,&amp;b)</span><br><span class="line">	fmt.Println(a==b)<span class="comment">//true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果是 true</p>
+<p>只是加了Println，为什么结果会不一样？</p>
+<h4 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h4><p>有可能是逃逸分析导致的。</p>
+<h5 id="什么是逃逸分析"><a href="#什么是逃逸分析" class="headerlink" title="什么是逃逸分析"></a>什么是逃逸分析</h5><blockquote>
+<p>逃逸分析是一种确定指针动态范围的方法，可以分析在程序的哪些地方可以访问到指针。它涉及到指针分析和形状分析。 当一个变量(或对象)在子程序中被分配时，一个指向变量的指针可能逃逸到其它执行线程中，或者去调用子程序。如果使用尾递归优化（通常在函数编程语言中是需要的），对象也可能逃逸到被调用的子程序中。 如果一个子程序分配一个对象并返回一个该对象的指针，该对象可能在程序中的任何一个地方被访问到——这样指针就成功“逃逸”了。如果指针存储在全局变量或者其它数据结构中，它们也可能发生逃逸，这种情况是当前程序中的指针逃逸。 逃逸分析需要确定指针所有可以存储的地方，保证指针的生命周期只在当前进程或线程中。</p>
+</blockquote>
+<h5 id="加入逃逸分析有什么用"><a href="#加入逃逸分析有什么用" class="headerlink" title="加入逃逸分析有什么用"></a>加入逃逸分析有什么用</h5><blockquote>
+<p>最大的好处应该是减少gc的压力，不逃逸的对象分配在栈上，当函数返回时就回收了资源，不需要gc标记清除。<br>因为逃逸分析完后可以确定哪些变量可以分配在栈上，栈的分配比堆快，性能好。<br>同步消除，如果你定义的对象的方法上有同步锁，但在运行时，却只有一个线程在访问，此时逃逸分析后的机器码，会去掉同步锁运行。</p>
+<p>go消除了堆和栈的区别<br>go在一定程度消除了堆和栈的区别，因为go在编译的时候进行逃逸分析，来决定一个对象放栈上还是放堆上，不逃逸的对象放栈上，可能逃逸的放堆上。</p>
+</blockquote>
+<h5 id="开启逃逸分析日志"><a href="#开启逃逸分析日志" class="headerlink" title="开启逃逸分析日志"></a>开启逃逸分析日志</h5><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">编译参数时  -gcflags <span class="string">&#x27;-m -l&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们加入参数后运行一下上面的代码</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> run -gcflags=<span class="string">&quot;-m -l&quot;</span> main.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+
+<p>结果1:</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">./main.<span class="keyword">go</span>:<span class="number">6</span>:<span class="number">10</span>: <span class="built_in">new</span>(<span class="keyword">struct</span> &#123;&#125;) does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">7</span>:<span class="number">10</span>: <span class="built_in">new</span>(<span class="keyword">struct</span> &#123;&#125;) does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">9</span>:<span class="number">13</span>: ... argument does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">9</span>:<span class="number">15</span>: a == b escapes to heap</span><br><span class="line"><span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>结果2：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">./main.<span class="keyword">go</span>:<span class="number">6</span>:<span class="number">2</span>: moved to heap: a</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">7</span>:<span class="number">2</span>: moved to heap: b</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">6</span>:<span class="number">10</span>: <span class="built_in">new</span>(<span class="keyword">struct</span> &#123;&#125;) escapes to heap</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">7</span>:<span class="number">10</span>: <span class="built_in">new</span>(<span class="keyword">struct</span> &#123;&#125;) escapes to heap</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">8</span>:<span class="number">13</span>: ... argument does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">9</span>:<span class="number">13</span>: ... argument does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">9</span>:<span class="number">15</span>: a == b escapes to heap</span><br><span class="line"><span class="number">0xc00000e028</span> <span class="number">0xc00000e030</span></span><br><span class="line"><span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="为什么逃逸分析后相等"><a href="#为什么逃逸分析后相等" class="headerlink" title="为什么逃逸分析后相等"></a>为什么逃逸分析后相等</h5><p>这里主要与 Go runtime 的一个优化细节有关，如下：</p>
+<blockquote>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// base address for all 0-byte allocations</span></span><br><span class="line"><span class="keyword">var</span> zerobase <span class="type">uintptr</span></span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>变量 <code>zerobase</code> 是所有 0 字节分配的基础地址。更进一步来讲，就是空（0字节）的在进行了逃逸分析后，往堆分配的都会指向 <code>zerobase</code> 这一个地址。</p>
+<p>所以空 struct 在逃逸后本质上指向了 <code>zerobase</code></p>
+<h5 id="为什么没有逃逸分析就不相等"><a href="#为什么没有逃逸分析就不相等" class="headerlink" title="为什么没有逃逸分析就不相等"></a>为什么没有逃逸分析就不相等</h5><p>Go编译器做了优化，Go团队不希望大家依赖这一个来做判断依据。</p>
+<blockquote>
+<p>This is an intentional language choice to give implementations flexibility in how they handle pointers to zero-sized objects. If every pointer to a zero-sized object were required to be different, then each allocation of a zero-sized object would have to allocate at least one byte. If every pointer to a zero-sized object were required to be the same, it would be different to handle taking the address of a zero-sized field within a larger struct.</p>
+</blockquote>
+<p>我们去掉优化试一下</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> run -gcflags=<span class="string">&quot;-N -l&quot;</span> main.<span class="keyword">go</span> </span><br></pre></td></tr></table></figure>
+
+<p>没有逃逸分析的也返回了true</p>
+<h4 id="END"><a href="#END" class="headerlink" title="END"></a>END</h4><ul>
+<li>若逃逸到堆上，空结构体则默认分配的是 <code>runtime.zerobase</code> 变量，是专门用于分配到堆上的 0 字节基础地址。因此两个空结构体，都是 <code>runtime.zerobase</code>，一比较当然就是 true 了。</li>
+<li>若没有发生逃逸，也就分配到栈上。在 Go 编译器的代码优化阶段，会对其进行优化，直接返回 false。并不是传统意义上的，真的去比较了。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Golang/" rel="tag"># Golang</a>
+              <a href="/tags/%E7%BB%93%E6%9E%84%E4%BD%93/" rel="tag"># 结构体</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/composer%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F.html" rel="prev" title="composer镜像加速">
+      <i class="fa fa-chevron-left"></i> composer镜像加速
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/ssl%E8%AF%81%E4%B9%A6%E7%94%B3%E8%AF%B7.html" rel="next" title="ssl证书申请">
+      ssl证书申请 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">什么是逃逸分析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8A%A0%E5%85%A5%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E6%9C%89%E4%BB%80%E4%B9%88%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">加入逃逸分析有什么用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%BC%80%E5%90%AF%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E6%97%A5%E5%BF%97"><span class="nav-number">1.3.</span> <span class="nav-text">开启逃逸分析日志</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E5%90%8E%E7%9B%B8%E7%AD%89"><span class="nav-number">1.4.</span> <span class="nav-text">为什么逃逸分析后相等</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B2%A1%E6%9C%89%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90%E5%B0%B1%E4%B8%8D%E7%9B%B8%E7%AD%89"><span class="nav-number">1.5.</span> <span class="nav-text">为什么没有逃逸分析就不相等</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#END"><span class="nav-number">2.</span> <span class="nav-text">END</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="se7en" src="/images/avatar_blog.jpg">
+  <p class="site-author-name" itemprop="name">se7en</p>
+  <div class="site-description" itemprop="description">斜杠青年，se7en的博客</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">se7en</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="external nofollow noopener noreferrer" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="external nofollow noopener noreferrer" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
